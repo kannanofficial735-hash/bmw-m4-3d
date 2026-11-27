@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#05060a" />
+<title>THE NEW BMW M4 — Competition Coupé | BMW M</title>
+<meta name="description" content="Explore the new BMW M4 Competition G82 in real-time 3D. 510 hp, 0–100 km/h in 3.5 s, M xDrive. Configure, estimate EMI and reserve a test drive." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- Luna fix (27 Nov 2026): all JS libraries vendored locally in ./vendor/ so the
+     site works even if a CDN is slow/blocked on a phone. No Tailwind - styles.css
+     covers every class used; the Tailwind CDN script only caused a console error. -->
+<link rel="stylesheet" href="styles.css">
+
+<!-- GSAP + ScrollTrigger (local, classic scripts, execute before the deferred module) -->
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+
+<!-- Three.js as ES module (local) -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/"
+  }
+}
+</script>
+</head>
+
+<body>
+
+<!-- ============ WEBGL FALLBACK (visible only if WebGL is unavailable) ============ -->
+<div class="webgl-fallback" id="webglFallback" aria-hidden="true">
+  <div class="fallback-glow"></div>
+  <svg class="fallback-car" viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="fbBody" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="55%" stop-color="#dfe4ea"/>
+        <stop offset="100%" stop-color="#9aa3ad"/>
+      </linearGradient>
+    </defs>
+    <path d="M40 148 C40 128 60 118 92 116 L150 112 C176 84 214 68 268 66 L380 66
+             C424 68 456 86 480 112 L556 118 C588 122 604 132 604 148 L604 158
+             C604 164 600 168 592 168 L52 168 C44 168 40 164 40 158 Z"
+          fill="url(#fbBody)" opacity="0.9"/>
+    <path d="M186 110 C206 88 236 78 276 77 L372 77 C406 79 430 92 448 110 Z" fill="#0b0e13" opacity="0.85"/>
+    <rect x="228" y="112" width="180" height="26" rx="8" fill="#0b0e13" opacity="0.55"/>
+    <circle cx="176" cy="158" r="34" fill="#0b0e13"/><circle cx="176" cy="158" r="17" fill="#5b636d"/>
+    <circle cx="470" cy="158" r="34" fill="#0b0e13"/><circle cx="470" cy="158" r="17" fill="#5b636d"/>
+  </svg>
+  <p class="fallback-note">Your browser has WebGL disabled — showing static preview.</p>
+</div>
+
+<!-- ============ 3D CANVAS ============ -->
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<!-- ============ LOADER ============ -->
+<div class="loader" id="loader">
+  <div class="loader-mark">BMW<span>M</span></div>
+  <div class="loader-bar"><i></i></div>
+  <p>Building the M4…</p>
+</div>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <a class="nav-logo" href="#hero" aria-label="BMW home">
+    <svg viewBox="0 0 48 48" width="30" height="30" aria-hidden="true">
+      <circle cx="24" cy="24" r="23" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M24 1a23 23 0 0 1 0 46z" fill="currentColor" opacity=".9"/>
+      <path d="M24 1a23 23 0 0 0 0 46z" fill="currentColor" opacity=".35"/>
+      <circle cx="24" cy="24" r="23" fill="none" stroke="#05060a" stroke-width="3"/>
+      <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="1" opacity=".5"/>
+    </svg>
+    <span>BMW&nbsp;M</span>
+  </a>
+  <nav class="nav-links">
+    <a href="#design">Design</a>
+    <a href="#performance">Performance</a>
+    <a href="#interior">Interior</a>
+    <a href="#colours">Colours</a>
+  </nav>
+  <a href="#models" class="btn btn-primary btn-sm nav-cta">Configure</a>
+</header>
+
+<main>
+
+  <!-- ================= 1. HERO (300vh pinned) ================= -->
+  <section class="hero" id="hero">
+    <div class="hero-sticky">
+      <div class="hero-inner">
+        <div class="hero-copy" id="heroCopy">
+          <div class="eyebrow"><i class="dot"></i> BMW M · G82 · Competition Coupé</div>
+          <h1 class="hero-title">THE NEW<br><span class="grad">BMW M4</span></h1>
+          <p class="hero-sub">3.0-litre M TwinPower Turbo inline-six · 510 hp · M xDrive</p>
+          <div class="hero-price">
+            <span class="cur">₹</span><span class="amt">1,53,00,000</span>
+            <em>INDICATIVE ex-showroom</em>
+          </div>
+          <div class="hero-cta">
+            <a href="#models" class="btn btn-primary">Configure &amp; Reserve</a>
+            <a href="#design" class="btn btn-ghost">Explore the design</a>
+          </div>
+        </div>
+
+        <div class="hero-meta glass" id="heroMeta">
+          <div class="hm"><b>510</b><span>hp</span></div>
+          <div class="hm"><b>3.5</b><span>s · 0–100</span></div>
+          <div class="hm"><b>250</b><span>km/h</span></div>
+        </div>
+      </div>
+      <div class="scroll-hint"><i></i><span>Scroll to orbit</span></div>
+    </div>
+  </section>
+
+  <!-- ================= 2. DESIGN ================= -->
+  <section class="design" id="design">
+    <div class="design-sticky">
+
+      <div class="design-step" data-step="0">
+        <div class="panel glass">
+          <span class="step-index">01</span>
+          <h2>The Kidney Grille</h2>
+          <p>Vertical, frameless and unapologetic. The largest kidney grille ever fitted to an M car feeds the
+             3.0-litre straight-six with cold, dense air — and gives the G82 a face you will not confuse with anything else.</p>
+        </div>
+      </div>
+
+      <div class="design-step" data-step="1">
+        <div class="panel glass">
+          <span class="step-index">02</span>
+          <h2>Laser-sharp Eyes</h2>
+          <p>Slim adaptive LED headlights with iconic angel-eye rings and a blue laser accent. They read the road
+             500 metres ahead and re-shape their beam around oncoming traffic.</p>
+        </div>
+      </div>
+
+      <div class="design-step" data-step="2">
+        <div class="panel glass">
+          <span class="step-index">03</span>
+          <h2>Forged Alloys</h2>
+          <p>19-inch front / 20-inch rear M forged double-spoke wheels wrapped in track-ready rubber,
+             with blue M Compound brakes and a carbon-ceramic option behind them.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= 3. PERFORMANCE ================= -->
+  <section class="performance" id="performance">
+    <div class="perf-inner">
+      <div class="section-head">
+        <span class="eyebrow"><i class="dot"></i> Performance</span>
+        <h2>Engineered to <span class="grad">overwhelm</span>.</h2>
+        <p>Every M4 is developed on the Nürburgring. Every figure below was earned there.</p>
+      </div>
+
+      <div class="perf-grid">
+        <div class="perf-card glass">
+          <b class="stat-num" data-value="510" data-dec="0">0</b><span class="unit">hp</span>
+          <p>M TwinPower Turbo inline-six</p>
+        </div>
+        <div class="perf-card glass">
+          <b class="stat-num" data-value="3.5" data-dec="1">0</b><span class="unit">s</span>
+          <p>0 – 100 km/h</p>
+        </div>
+        <div class="perf-card glass">
+          <b class="stat-num" data-value="250" data-dec="0">0</b><span class="unit">km/h</span>
+          <p>Top speed (limited)</p>
+        </div>
+        <div class="perf-card glass">
+          <b class="stat-num" data-value="650" data-dec="0">0</b><span class="unit">Nm</span>
+          <p>Peak torque, 2 750–5 500 rpm</p>
+        </div>
+      </div>
+
+      <div class="perf-strip glass">
+        <span>M xDrive</span><i></i><span>8-speed M Steptronic</span><i></i>
+        <span>Adaptive M suspension</span><i></i><span>M Drive Professional</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4. INTERIOR ================= -->
+  <section class="interior" id="interior">
+    <div class="interior-inner">
+      <div class="interior-copy">
+        <span class="eyebrow"><i class="dot"></i> Interior</span>
+        <h2>The cockpit of a <span class="grad">race car</span>, trimmed like a lounge.</h2>
+        <p>M Carbon bucket seats, Merino leather, a curved display and a carbon-fibre centre console.
+           Everything you touch is either functional or beautiful — most of it is both.</p>
+        <ul class="interior-list">
+          <li><b>M Carbon bucket seats</b><span>Illuminated M logo, integrated head restraints</span></li>
+          <li><b>BMW Curved Display</b><span>12.3" cluster + 14.9" control display</span></li>
+          <li><b>Harman Kardon surround</b><span>16 speakers, 464 W</span></li>
+          <li><b>Ambient lighting</b><span>9 selectable light designs</span></li>
+        </ul>
+      </div>
+      <div class="cabin-visual glass">
+        <div class="cabin-strip s1"></div>
+        <div class="cabin-strip s2"></div>
+        <div class="cabin-wheel"></div>
+        <div class="cabin-dash"></div>
+        <div class="cabin-glow"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 5. COLOURS ================= -->
+  <section class="colours" id="colours">
+    <div class="colours-inner">
+      <div class="colours-panel glass">
+        <span class="eyebrow"><i class="dot"></i> Exterior</span>
+        <h2>Choose your <span class="grad">character</span>.</h2>
+        <p class="colour-active" id="colourActive">Alpine White</p>
+        <div class="colour-swatches" id="colourSwatches"></div>
+        <p class="fine">Paint finish shown in real-time 3D. Metallic and frozen finishes may affect delivery time.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 6. MODELS / PURCHASE ================= -->
+  <section class="models" id="models">
+    <div class="models-inner">
+      <div class="section-head">
+        <span class="eyebrow"><i class="dot"></i> The Range</span>
+        <h2>Configure. Estimate. <span class="grad">Reserve.</span></h2>
+        <p>All prices are <b>INDICATIVE ex-showroom, India</b> and exclude registration, insurance and optional equipment.
+           EMI figures are estimates only and are not a finance offer.</p>
+      </div>
+
+      <div class="models-grid" id="modelsGrid"><!-- generated by main.js --></div>
+
+      <div class="models-note glass">
+        <span class="mn-icon">i</span>
+        <p>Your configuration and enquiry are stored <b>only in this browser</b> (localStorage). No payment is taken,
+           no data leaves your device. A BMW Genius will contact you on the number you provide.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= 7. FOOTER ================= -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-mark">BMW<span>M</span></div>
+      <p>Sheer driving pleasure.</p>
+    </div>
+    <div class="footer-cols">
+      <div>
+        <h4>Models</h4>
+        <a href="#models">M4 Competition</a>
+        <a href="#models">M3 Competition</a>
+        <a href="#models">X5 xDrive40i</a>
+        <a href="#models">i4 eDrive40</a>
+        <a href="#models">330i M Sport</a>
+      </div>
+      <div>
+        <h4>Experience</h4>
+        <a href="#design">Design</a>
+        <a href="#performance">Performance</a>
+        <a href="#interior">Interior</a>
+        <a href="#colours">Colours</a>
+      </div>
+      <div>
+        <h4>Ownership</h4>
+        <a href="#models">Book a test drive</a>
+        <a href="#models">Finance &amp; EMI</a>
+        <a href="#models">Service packages</a>
+        <a href="#models">Contact a Genius</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© <span id="year"></span> BMW M — concept experience. Not an official BMW AG website.</span>
+    <span>Prices INDICATIVE · ex-showroom India · All figures manufacturer-claimed.</span>
+  </div>
+</footer>
+
+<!-- ================= MODAL ================= -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card glass">
+    <button class="modal-close" data-close aria-label="Close">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+  /* Luna fix: if main.js fails to boot (e.g. WebGL/CDN blocked), never leave the
+     loader stuck forever - hide it after 9s so the page content is still readable. */
+  setTimeout(function () {
+    if (!window.__bmwBooted) {
+      var l = document.getElementById('loader');
+      if (l) l.style.display = 'none';
+    }
+  }, 9000);
+</script>
+<script type="module" src="main.js"></script>
+</body>
+</html>
